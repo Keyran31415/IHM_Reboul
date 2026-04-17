@@ -1,18 +1,35 @@
 import tkinter as tk
 import modbus
 
-port = "COM28"
+port = "COM8"
 baudrate = 9600
 requete = bytes([0x01, 0x03, 0x00, 0x00, 0x00, 0x05, 0x85, 0xC9])
 reponseModbus=""
+temperature = 0
+humidite = 0
+pression = 0
+etat_alarme = 0
 
 def envoyer_requete():
-    global port,baudrate,requete, reponseModbus
-    sucess, reponseModbus = modbus.envoyer_trame(port, baudrate, requete)
+    global port,baudrate,requete, reponseModbus, temperature, humidite, pression, etat_alarme
+    sucess, reponseModbus, temperature, humidite, pression, etat_alarme = modbus.envoyer_trame(port, baudrate, requete)
     label_reponse_donnees_affiche.configure(text=reponseModbus)  # Affichage de la réponse
+    label_reponse_temperature_donnees.configure(text=temperature)
+    label_reponse_humidite_donnees.configure(text=humidite)
+    label_reponse_pression_donnees.configure(text=pression)
+    maj_alarme(etat_alarme)
 
-def maj_alarme():
-    print("maj_alarme")
+def maj_alarme(etat_alarme):
+    if etat_alarme == 0:
+        label_alerte_configuration.configure(text="RAS", bg="lightgreen")
+    elif etat_alarme == 1:
+        label_alerte_configuration.configure(text="ALERTE", bg="blue")
+    elif etat_alarme == 2:
+        label_alerte_configuration.configure(text="CRITIQUE", bg="red")
+
+def reset_alarme():
+    print("reset alarme")
+    requete_reset = bytes([0x01, 0x05, 0x00, 0x01, 0xFF, 0x00, 0xDD, 0xFA])
 
 
 """Fenetre"""
@@ -74,6 +91,9 @@ entry_requete_modbus.insert(0, requete.hex())
 bouton_requete_modbus = tk.Button(frame_requete_modbus, text="Envoyer", padx = 10, command=envoyer_requete)
 bouton_requete_modbus.pack(side=tk.LEFT) #Bouton envoyer
 
+bouton_reset_alarme_modbus = tk.Button(frame_requete_modbus, text="Reset alarme", padx = 10, command=reset_alarme)
+bouton_reset_alarme_modbus.pack(side=tk.LEFT) #Bouton reset
+
 
 
 """LabelFrame données"""
@@ -93,19 +113,19 @@ label_reponse_donnees_affiche.pack()
 sous_frame_temperature_donnees = tk.LabelFrame(frame_donnees, bg="grey", fg="black")
 sous_frame_temperature_donnees.pack(side=tk.LEFT) #Sous LabelFrame
 
-label_reponse_temperature_donnees = tk.Label(sous_frame_temperature_donnees,text="A modifier", bg="grey", padx = 50)
+label_reponse_temperature_donnees = tk.Label(sous_frame_temperature_donnees,text="Température", bg="grey", padx = 50)
 label_reponse_temperature_donnees.pack()
 
 sous_frame_humidite_donnees = tk.LabelFrame(frame_donnees, bg="grey", fg="black")
 sous_frame_humidite_donnees.pack(side=tk.LEFT) #Sous LabelFrame
 
-label_reponse_humidite_donnees = tk.Label(sous_frame_humidite_donnees,text="A modifier", bg="grey", padx = 50)
+label_reponse_humidite_donnees = tk.Label(sous_frame_humidite_donnees,text="Humidité", bg="grey", padx = 50)
 label_reponse_humidite_donnees.pack()
 
 sous_frame_pression_donnees = tk.LabelFrame(frame_donnees, bg="grey", fg="black")
 sous_frame_pression_donnees.pack(side=tk.LEFT) #Sous LabelFrame
 
-label_reponse_pression_donnees = tk.Label(sous_frame_pression_donnees,text="A modifier", bg="grey", padx = 50)
+label_reponse_pression_donnees = tk.Label(sous_frame_pression_donnees,text="Pression", bg="grey", padx = 50)
 label_reponse_pression_donnees.pack()
 
 
